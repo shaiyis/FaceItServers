@@ -27,6 +27,7 @@ while True:
     time_bytes = b""
     inx = 0
 
+    # Y/N before name for data on me or not - not necessary
     for char in message:
         inx += 1
         c = char
@@ -53,5 +54,3 @@ while True:
         print(prediction)
         # Sending a reply to client
         UDPServerSocket.sendto(str.encode(prediction), address)
-
-
