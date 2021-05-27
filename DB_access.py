@@ -18,8 +18,4 @@ print(mydb.list_collection_names())
 # x = mycol.insert_many(mylist)
 # print(x.inserted_ids)
 
-# [gilad, israel, asaf]
-# [1,2,7]
-#
-# -1, 1, 0
 

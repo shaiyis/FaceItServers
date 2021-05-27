@@ -26,7 +26,8 @@ class EmotionDetector(pr.Processor):
         # got more than 1 face?
         # return self.draw(image, boxes2D)
 
-    # detect = EmotionDetector()
-    # image = cv2.imread("images/637546382815275184.jpg")
-    # detect.call(image)
+
+detect = EmotionDetector()
+image = cv2.imread("images/photo_2021-04-21_21-11-51.jpg")
+detect.call(image)
 

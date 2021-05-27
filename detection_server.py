@@ -54,3 +54,8 @@ while True:
         print(prediction)
         # Sending a reply to client
         UDPServerSocket.sendto(str.encode(prediction), address)
+    else:
+        print("not detected")
+        UDPServerSocket.sendto(str.encode("not detected"), address)
+
+
