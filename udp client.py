@@ -11,4 +11,3 @@ msgFromServer = UDPClientSocket.recvfrom(bufferSize)
 
 msg = "Message from Server {}".format(msgFromServer[0])
 print(msg)
-

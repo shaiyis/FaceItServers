@@ -8,44 +8,89 @@
 # to see mongoDB state visually, just copy mongodb://localhost:27017/ to mongoDB Compass
 
 from flask import Flask
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from flask_pymongo import PyMongo
+import pymongo.errors
+import os
+import hashlib
 
 app = Flask(__name__)  # Flask app
 
-mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/todo_db")
+mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
 
-# mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/FaceIt")
-# FaceIt_DB = mongodb_client.db
 
 # print(FaceIt_DB.list_collection_names())
 
 
-@app.route("/add_one")
-def add_one():
-    db.todos.insert_one({'title': "todo title", 'body': "todo body"})
-    return jsonify(message="success")
-
-
-@app.route("/add_many")
-def add_many():
-    db.todos.insert_many([
-        {'_id': 1, 'title': "todo title one ", 'body': "todo body one "},
-        {'_id': 2, 'title': "todo title two", 'body': "todo body two"},
-        {'_id': 3, 'title': "todo title three", 'body': "todo body three"},
-        {'_id': 4, 'title': "todo title four", 'body': "todo body four"},
-        {'_id': 5, 'title': "todo title five", 'body': "todo body five"},
-        {'_id': 6, 'title': "todo title six", 'body': "todo body six"},
-        ])
-    return jsonify(message="success")
+# db.todos.insert_many([
+# ])
 
 
 @app.route("/login")
 def login():
-    username = request.args.get('username')
-    password = request.args.get('password')
-    return "login " + username + " " + password
+    try:
+        username = request.args.get('username')
+        # if db.users.find_one({"username": username}) is None:
+        #     print("Do you already have an account?")
+
+        provided_password = request.args.get('password')
+        # get salt and key for this user
+        salt = db.users.find_one({"username": username}).get('salt')
+        key = db.users.find_one({"username": username}).get('key')
+    except pymongo.errors.ServerSelectionTimeoutError:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+    new_key = hashlib.pbkdf2_hmac(
+        'sha256',
+        provided_password.encode('utf-8'),  # Convert the password to bytes
+        salt,
+        100000
+    )
+    if new_key == key:
+        print("Password is correct")
+        # todo go to udp loop with new thread
+
+        return Response("success", status=200, mimetype='text/xml')
+    else:
+        print('Wrong username/password!')
+        return Response("Wrong username/password!", status=200, mimetype='text/xml')
+
+
+@app.route("/register", methods=['POST'])
+def register():
+    try:
+        username = request.form.get('userName')
+        # if username is already exist in DB, return appropriate answer
+        if db.users.find_one({"username": username}) is not None:
+            print("username already in DB!")
+            return Response("userName exists", status=400, mimetype='text/xml')
+
+        email = request.form.get('email')
+        # if email is already exist in DB, return appropriate answer
+        if db.users.find_one({"email": email}) is not None:
+            return Response("mail exists", status=400, mimetype='text/xml')
+
+        salt = os.urandom(32)
+        password = request.form.get('password')
+        key = hashlib.pbkdf2_hmac(
+            'sha256',  # The hash digest algorithm for HMAC
+            password.encode('utf-8'),  # Convert the password to bytes
+            salt,  # Provide the salt
+            100000  # It is recommended to use at least 100,000 iterations of SHA-256
+        )
+        # store key and salt for this user, don't store password
+        db.users.insert_one({'username': username, 'key': key, 'salt': salt, 'email': email})
+        return Response("success", status=200, mimetype='text/xml')
+    except pymongo.errors.ServerSelectionTimeoutError:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+
+@app.route("/stop")
+def stop():
+    pass
+    #  todo write statistics to DB, stop thread
+    # HTTP responses
 
 
 if __name__ == '__main__':
