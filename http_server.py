@@ -13,16 +13,16 @@ from flask_pymongo import PyMongo
 import pymongo.errors
 import os
 import hashlib
+from threading import Thread
+from DetectionServer import DetectionServer
 
 app = Flask(__name__)  # Flask app
 
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
-
+server = DetectionServer()
 
 # print(FaceIt_DB.list_collection_names())
-
-
 # db.todos.insert_many([
 # ])
 
@@ -31,14 +31,15 @@ db = mongodb_client.db
 def login():
     try:
         username = request.args.get('username')
-        # if db.users.find_one({"username": username}) is None:
-        #     print("Do you already have an account?")
+        if db.users.find_one({"username": username}) is None:
+            print("Do you already have an account?")
+            return Response("wrong", status=200, mimetype='text/xml')
 
         provided_password = request.args.get('password')
         # get salt and key for this user
         salt = db.users.find_one({"username": username}).get('salt')
         key = db.users.find_one({"username": username}).get('key')
-    except pymongo.errors.ServerSelectionTimeoutError:
+    except pymongo.errors.PyMongoError:
         return Response("db failure", status=400, mimetype='text/xml')
 
     new_key = hashlib.pbkdf2_hmac(
@@ -50,11 +51,12 @@ def login():
     if new_key == key:
         print("Password is correct")
         # todo go to udp loop with new thread
-
+        thread = Thread(target=server.get_emotions())
+        thread.start()
         return Response("success", status=200, mimetype='text/xml')
     else:
-        print('Wrong username/password!')
-        return Response("Wrong username/password!", status=200, mimetype='text/xml')
+        print('Password is wrong')
+        return Response("wrong", status=200, mimetype='text/xml')
 
 
 @app.route("/register", methods=['POST'])
@@ -82,16 +84,18 @@ def register():
         # store key and salt for this user, don't store password
         db.users.insert_one({'username': username, 'key': key, 'salt': salt, 'email': email})
         return Response("success", status=200, mimetype='text/xml')
-    except pymongo.errors.ServerSelectionTimeoutError:
+    except pymongo.errors.PyMongoError:
         return Response("db failure", status=400, mimetype='text/xml')
 
 
 @app.route("/stop")
 def stop():
-    pass
-    #  todo write statistics to DB, stop thread
+    server.stop_conversation()
+    # todo write statistics to DB, stop thread
     # HTTP responses
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
