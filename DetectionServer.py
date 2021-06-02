@@ -66,7 +66,13 @@ class DetectionServer:
                 udp_server_socket.sendto(str.encode("not detected"), address)
 
         udp_server_socket.close()
-        self.stop = False
 
     def stop_conversation(self):
         self.stop = True
+
+    def set_stop_false(self):
+        self.stop = False
+
+    def get_stop(self):
+        return self.stop
+

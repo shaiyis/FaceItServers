@@ -22,6 +22,7 @@ mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
 server = DetectionServer()
 
+
 # print(FaceIt_DB.list_collection_names())
 # db.todos.insert_many([
 # ])
@@ -50,8 +51,7 @@ def login():
     )
     if new_key == key:
         print("Password is correct")
-        # todo go to udp loop with new thread
-        thread = Thread(target=server.get_emotions())
+        thread = Thread(target=server.get_emotions)
         thread.start()
         return Response("success", status=200, mimetype='text/xml')
     else:
@@ -91,11 +91,13 @@ def register():
 @app.route("/stop")
 def stop():
     server.stop_conversation()
-    # todo write statistics to DB, stop thread
-    # HTTP responses
+    # todo write statistics to DB, https protocol
+    if server.get_stop():
+        server.set_stop_false()
+        return Response("success", status=200, mimetype='text/xml')
+    else:
+        return Response("db failure", status=400, mimetype='text/xml')
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
