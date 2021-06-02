@@ -16,6 +16,8 @@ class DetectionServer:
         self.bufferSize = 1000000
         self.stop = False
         self.detector = EmotionDetector()
+        self.total_checks = 0
+        self.total_matches = 0
 
     def get_emotions(self):
         udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -67,7 +69,9 @@ class DetectionServer:
 
         udp_server_socket.close()
 
-    def stop_conversation(self):
+    def stop_conversation(self, checks, matches):
+        self.total_checks = checks
+        self.total_matches = matches
         self.stop = True
 
     def set_stop_false(self):
@@ -75,4 +79,3 @@ class DetectionServer:
 
     def get_stop(self):
         return self.stop
-

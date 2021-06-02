@@ -88,9 +88,11 @@ def register():
         return Response("db failure", status=400, mimetype='text/xml')
 
 
-@app.route("/stop")
+@app.route("/stop", methods=['POST'])
 def stop():
-    server.stop_conversation()
+    checks = int(request.form.get('checks'))
+    matches = int(request.form.get('matches'))
+    server.stop_conversation(checks, matches)
     # todo write statistics to DB, https protocol
     if server.get_stop():
         server.set_stop_false()
