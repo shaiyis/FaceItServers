@@ -2,8 +2,7 @@ import socket
 import numpy as np
 import cv2
 from emotion_detector import EmotionDetector
-
-
+from datetime import datetime
 # localIP = ''
 # localPort = 5402
 # bufferSize = 1000000
@@ -58,6 +57,7 @@ class DetectionServer:
             img_bytes = message[inx:]
             name = name_bytes.decode()
             time = time_bytes.decode()
+            time = datetime.fromisoformat(time)
 
             np_arr = np.frombuffer(img_bytes, np.uint8)
             img_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # cv2.IMREAD_COLOR in OpenCV 3.1

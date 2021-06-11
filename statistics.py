@@ -2,6 +2,7 @@ import socket
 import numpy as np
 import cv2
 from flask_pymongo import PyMongo
+from datetime import datetime, timedelta
 
 
 class Statistics:
@@ -10,25 +11,46 @@ class Statistics:
         self.db = db
 
     def get_user_match(self, user_name, time):
-        # self.db_insert_example()
+        # self.db_insert_statistics_example()
+        now = datetime.now()
+        # check last week's conversations
+        week_ago = now - timedelta(days=7)
+        # check the last month's conversations (last 30 days)
+        month_ago = now - timedelta(days=30)
+        print(f"week ago: {week_ago}")
+
+        percentage = None
         if time == "last_call":
             print("last_call")
-            last_call_matches = self.db.statistics.find(
-                {"username": user_name, "is_user": True}, {"matches": 1, "checks": 1}).sort("date", -1)[0]
-            print(last_call_matches)
-            if last_call_matches is None:
-                return None
-            else:
-                print(last_call_matches)
-                percentage = round(float(last_call_matches["matches"] / last_call_matches["checks"]) * 100, 2)
-                return percentage
-            # return $ matches of last call
+            all_user_matches = self.db.statistics.find(
+                {"username": user_name, "is_user": True}, {"matches": 1, "checks": 1}).sort("date", -1)
+            if all_user_matches is not None:
+                all_user_matches = all_user_matches[:1]
         elif time == "last_week":
             print("last_week")
+            all_user_matches = self.db.statistics.find(
+                {"username": user_name, "is_user": True, "date": {"$gte": week_ago}})
         elif time == "last_month":
             print("last_month")
+            all_user_matches = self.db.statistics.find(
+                {"username": user_name, "is_user": True, "date": {"$gte": month_ago}})
         else:
-            print("nothing")
+            all_user_matches = None
+        if all_user_matches is not None:
+            all_checks, all_matches = self.get_checks_and_matches(all_user_matches)
+            percentage = round(float(all_matches / all_checks) * 100, 2)
+
+        return percentage
+
+    def get_checks_and_matches(self, all_matches_from_db):
+        all_checks, all_matches, i = 0, 0, 0
+        for x in all_matches_from_db:
+            print(f"item number {i + 1}")
+            print(x)
+            all_checks += x["checks"]
+            all_matches += x["matches"]
+            i = i + 1
+        return all_checks, all_matches
 
     def db_insert_statistics_example(self):
         # conversation_id, username, participant (name if not username - user),
@@ -42,7 +64,7 @@ class Statistics:
                 {"conversation_id": i,
                  "username": username,
                  "participant": "user",
-                 "date": i * 4,
+                 "date": datetime.now() - timedelta(days=i % 8),
                  "is_user": True,
                  "happy": i * 10 + 1,
                  "neutral": i * 10 + 2,
@@ -59,7 +81,7 @@ class Statistics:
                 {"conversation_id": i,
                  "username": username,
                  "participant": "Yonatan",
-                 "date": i * 4,
+                 "date": datetime.now(),
                  "is_user": False,
                  "happy": i * 10 + 1,
                  "neutral": i * 10 + 2,
@@ -88,5 +110,9 @@ class Statistics:
         #     {"name": "Viola", "address": "Sideway 1633"}
         # ]
         self.db.statistics.insert_many(mylist)
+
+
 # conversation_id, username, participant (other), date, number of times per each emotion,
 # *total_time*
+def ticks(dt):
+    return (dt - datetime(1, 1, 1)).total_seconds() * 10000000
