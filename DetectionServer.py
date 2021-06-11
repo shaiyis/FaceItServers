@@ -57,7 +57,8 @@ class DetectionServer:
             img_bytes = message[inx:]
             name = name_bytes.decode()
             time = time_bytes.decode()
-            time = datetime.fromisoformat(time)
+            time = datetime.fromisoformat(time)  # todo insert to DB, only first one, save to variable only first iteration
+
 
             np_arr = np.frombuffer(img_bytes, np.uint8)
             img_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # cv2.IMREAD_COLOR in OpenCV 3.1
