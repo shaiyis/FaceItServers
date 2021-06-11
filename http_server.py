@@ -15,13 +15,15 @@ import os
 import hashlib
 from threading import Thread
 from DetectionServer import DetectionServer
+from statistics import Statistics
+
 
 app = Flask(__name__)  # Flask app
 
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
 server = DetectionServer()
-
+statistics = Statistics(db)
 
 # print(FaceIt_DB.list_collection_names())
 # db.todos.insert_many([
@@ -99,6 +101,21 @@ def stop():
         return Response("success", status=200, mimetype='text/xml')
     else:
         return Response("db failure", status=400, mimetype='text/xml')
+
+
+@app.route("/statistics/user/match", methods=['GET'])
+def match_user():
+    user_name = request.args.get('user_name')
+    time = request.args.get('time')
+    match_percents = statistics.get_user_match(user_name, time)
+    if match_percents is None:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+    return jsonify(({'percents': match_percents}))
+
+# def match_statistics(username):
+#
+#
 
 
 if __name__ == '__main__':
