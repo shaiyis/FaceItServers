@@ -51,7 +51,7 @@ def login():
     )
     if new_key == key:
         print("Password is correct")
-        thread = Thread(target=server.get_emotions)
+        thread = Thread(target=server.get_emotions, args=db)
         thread.start()
         return Response("success", status=200, mimetype='text/xml')
     else:

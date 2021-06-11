@@ -19,37 +19,41 @@ class DetectionServer:
         self.total_checks = 0
         self.total_matches = 0
 
-    def get_emotions(self):
+    def get_emotions(self, db):
         udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         udp_server_socket.bind((self.localIP, self.localPort))
 
         print("UDP server up and listening")
 
         while not self.stop:
-            bytesAddressPair = udp_server_socket.recvfrom(self.bufferSize)
+            bytes_address_pair = udp_server_socket.recvfrom(self.bufferSize)
 
-            message = bytesAddressPair[0]
-            address = bytesAddressPair[1]  # Client IP
+            message = bytes_address_pair[0]
+            address = bytes_address_pair[1]  # Client IP
 
             get_time = False
             name_bytes = b""
             time_bytes = b""
-            inx = 0
+            inx = 1
+            is_me = False
 
-            # Y/N before name for data on me or not - not necessary
-            for char in message:
+            if message[0] == ord("Y"):
+                is_me = True
+
+            # Y before name for data on me necessary (updated date 6.6)
+            for char in message[1:]:
                 inx += 1
-                c = char
-                # \n
-                if c == 10:
+                # c = char
+
+                if char == ord("\n"): # int value of the char
                     if get_time is True:
                         break
                     get_time = True
                     continue
                 if get_time is False:
-                    name_bytes += bytes([c])
+                    name_bytes += bytes([char])
                 else:
-                    time_bytes += bytes([c])
+                    time_bytes += bytes([char])
 
             img_bytes = message[inx:]
             name = name_bytes.decode()
@@ -72,6 +76,7 @@ class DetectionServer:
     def stop_conversation(self, checks, matches):
         self.total_checks = checks
         self.total_matches = matches
+        # todo save to DB
         self.stop = True
 
     def set_stop_false(self):
