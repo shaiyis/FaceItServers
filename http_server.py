@@ -107,7 +107,11 @@ def stop():
 def match_user():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-    match_percents = statistics.get_user_match(user_name, time)
+    is_user = (request.args.get('is_user') == "true")
+    if is_user:
+        match_percents = statistics.get_user_match(user_name, time)
+    else:
+        match_percents = statistics.get_others_match(user_name, time)
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
 
