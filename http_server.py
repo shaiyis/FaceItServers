@@ -107,19 +107,36 @@ def stop():
 def match_user():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-    is_user = (request.args.get('is_user') == "true")
-    if is_user:
-        match_percents = statistics.get_user_match(user_name, time)
-    else:
-        match_percents = statistics.get_others_match(user_name, time)
+    match_percents = statistics.get_user_match(user_name, time)
+
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
 
     return jsonify(({'percents': match_percents}))
 
-# def match_statistics(username):
-#
-#
+
+@app.route("/statistics/user/happy_sad", methods=['GET'])
+def compare_happy_sad():
+    user_name = request.args.get('user_name')
+    time = request.args.get('time')
+    match_percents = statistics.get_user_match(user_name, time)
+
+    if match_percents is None:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+    return jsonify(({'percents': match_percents}))
+
+
+@app.route("/statistics/others", methods=['GET'])
+def others():
+    user_name = request.args.get('user_name')
+    time = request.args.get('time')
+
+    match_percents = statistics.get_positive_others(user_name, time)
+    if match_percents is None:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+    return jsonify(({'percents': match_percents}))
 
 
 if __name__ == '__main__':
