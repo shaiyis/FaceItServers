@@ -1,8 +1,11 @@
 import socket
 import numpy as np
 import cv2
-from emotion_detector import EmotionDetector
+from EmotionDetector import EmotionDetector
 from datetime import datetime
+from dbSaver import DBSaver
+
+
 # localIP = ''
 # localPort = 5402
 # bufferSize = 1000000
@@ -15,14 +18,16 @@ class DetectionServer:
         self.bufferSize = 1000000
         self.stop = False
         self.detector = EmotionDetector()
-        self.total_checks = 0
-        self.total_matches = 0
+        self.dbSaver = None
 
-    def get_emotions(self, db):
+    def get_emotions(self, db_saver):
+        self.dbSaver = db_saver
         udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         udp_server_socket.bind((self.localIP, self.localPort))
 
         print("UDP server up and listening")
+
+        first_iteration = True
 
         while not self.stop:
             bytes_address_pair = udp_server_socket.recvfrom(self.bufferSize)
@@ -44,7 +49,7 @@ class DetectionServer:
                 inx += 1
                 # c = char
 
-                if char == ord("\n"): # int value of the char
+                if char == ord("\n"):  # int value of the char
                     if get_time is True:
                         break
                     get_time = True
@@ -56,9 +61,13 @@ class DetectionServer:
 
             img_bytes = message[inx:]
             name = name_bytes.decode()
-            time = time_bytes.decode()
-            time = datetime.fromisoformat(time)  # todo insert to DB, only first one, save to variable only first iteration
+            date = time_bytes.decode()
+            date = datetime.fromisoformat(
+               date)  # todo insert to DB, only first one, save to variable only first iteration
 
+            if first_iteration:
+                self.dbSaver.date = date
+                first_iteration = False
 
             np_arr = np.frombuffer(img_bytes, np.uint8)
             img_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # cv2.IMREAD_COLOR in OpenCV 3.1
@@ -75,9 +84,8 @@ class DetectionServer:
         udp_server_socket.close()
 
     def stop_conversation(self, checks, matches):
-        self.total_checks = checks
-        self.total_matches = matches
-        # todo save to DB
+        self.dbSaver.total_checks = checks
+        self.dbSaver.total_matches = matches
         self.stop = True
 
     def set_stop_false(self):
