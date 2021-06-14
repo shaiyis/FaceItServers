@@ -1,5 +1,5 @@
 # in terminal:
-# set FLASK_APP=http_server.py
+# set FLASK_APP=HttpServer.py
 # flask run
 # write this to use pycharm with flask:
 # if __name__ == '__main__':
@@ -7,8 +7,7 @@
 
 # to see mongoDB state visually, just copy mongodb://localhost:27017/ to mongoDB Compass
 
-from flask import Flask
-from flask import request, jsonify, Response
+from flask import Flask, request, jsonify, Response, redirect
 from flask_pymongo import PyMongo
 import pymongo.errors
 import os
@@ -16,8 +15,9 @@ import hashlib
 from threading import Thread
 from DetectionServer import DetectionServer
 from statistics import Statistics
+from dbSaver import DBSaver
 
-
+# ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)  # Flask app
 
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
@@ -25,11 +25,12 @@ db = mongodb_client.db
 server = DetectionServer()
 statistics = Statistics(db)
 
+
 # print(FaceIt_DB.list_collection_names())
 # db.todos.insert_many([
 # ])
 
-
+# example user : a,b
 @app.route("/login")
 def login():
     try:
@@ -53,8 +54,6 @@ def login():
     )
     if new_key == key:
         print("Password is correct")
-        thread = Thread(target=server.get_emotions, args=db)
-        thread.start()
         return Response("success", status=200, mimetype='text/xml')
     else:
         print('Password is wrong')
@@ -90,12 +89,23 @@ def register():
         return Response("db failure", status=400, mimetype='text/xml')
 
 
+@app.route("/start")
+def start():
+    try:
+        db_saver = DBSaver()  # access from "stop"
+        thread = Thread(target=server.get_emotions, args=(db_saver,))
+        thread.start()
+        return Response("success", status=200, mimetype='text/xml')
+    except:
+        return Response("failure", status=200, mimetype='text/xml')
+
+
 @app.route("/stop", methods=['POST'])
 def stop():
     checks = int(request.form.get('checks'))
     matches = int(request.form.get('matches'))
     server.stop_conversation(checks, matches)
-    # todo write statistics to DB, https protocol
+    # todo save to db
     if server.get_stop():
         server.set_stop_false()
         return Response("success", status=200, mimetype='text/xml')
@@ -138,6 +148,13 @@ def others():
 
     return jsonify(({'percents': match_percents}))
 
+# @app.before_request
+# def before_request():
+#     if not request.is_secure:
+#         url = request.url.replace('http://', 'https://', 1)
+#         code = 301
+#         return redirect(url, code=code)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)  # , ssl_context=('cert.pem', 'key.pem')
