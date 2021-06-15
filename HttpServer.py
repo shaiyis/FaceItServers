@@ -30,6 +30,7 @@ statistics = Statistics(db)
 # db.todos.insert_many([
 # ])
 
+
 # example user : a,b
 @app.route("/login")
 def login():
@@ -92,7 +93,8 @@ def register():
 @app.route("/start")
 def start():
     try:
-        db_saver = DBSaver()  # access from "stop"
+        username = request.args.get('username')
+        db_saver = DBSaver(db=db, username=username)
         thread = Thread(target=server.get_emotions, args=(db_saver,))
         thread.start()
         return Response("success", status=200, mimetype='text/xml')
@@ -105,7 +107,7 @@ def stop():
     checks = int(request.form.get('checks'))
     matches = int(request.form.get('matches'))
     server.stop_conversation(checks, matches)
-    # todo save to db
+
     if server.get_stop():
         server.set_stop_false()
         return Response("success", status=200, mimetype='text/xml')

@@ -4,6 +4,7 @@ import cv2
 from EmotionDetector import EmotionDetector
 from datetime import datetime
 from dbSaver import DBSaver
+from Behaviors import Behaviors
 
 
 # localIP = ''
@@ -36,16 +37,16 @@ class DetectionServer:
             address = bytes_address_pair[1]  # Client IP
 
             get_time = False
-            name_bytes = b""
+            participant_bytes = b""
             time_bytes = b""
-            inx = 1
+            inx = 0
             is_me = False
 
             if message[0] == ord("Y"):
                 is_me = True
 
             # Y before name for data on me necessary (updated date 6.6)
-            for char in message[1:]:
+            for char in message:
                 inx += 1
                 # c = char
 
@@ -55,15 +56,23 @@ class DetectionServer:
                     get_time = True
                     continue
                 if get_time is False:
-                    name_bytes += bytes([char])
+                    participant_bytes += bytes([char])
                 else:
                     time_bytes += bytes([char])
 
             img_bytes = message[inx:]
-            name = name_bytes.decode()
+            participant = participant_bytes.decode()
+            if is_me:
+                participant = participant[1:]
             date = time_bytes.decode()
             date = datetime.fromisoformat(
-               date)  # todo insert to DB, only first one, save to variable only first iteration
+                date)
+
+            if participant not in self.dbSaver.feelings_dict:
+                if is_me:
+                    self.dbSaver.feelings_dict[participant] = [Behaviors(), True]
+                else:
+                    self.dbSaver.feelings_dict[participant] = [Behaviors(), False]
 
             if first_iteration:
                 self.dbSaver.date = date
@@ -75,18 +84,25 @@ class DetectionServer:
             prediction = self.detector.call(img_np)
             if prediction is not None:
                 print(prediction)
+                behaviors = self.dbSaver.feelings_dict[participant][0]
+                behaviors.update_behaviors(prediction)
                 # Sending a reply to client
                 udp_server_socket.sendto(str.encode(prediction), address)
             else:
                 print("not detected")
                 udp_server_socket.sendto(str.encode("not detected"), address)
 
+        print("thread is here")
         udp_server_socket.close()
 
     def stop_conversation(self, checks, matches):
         self.dbSaver.total_checks = checks
         self.dbSaver.total_matches = matches
         self.stop = True
+        # for loop on feelings_dict and update "total" field
+        for participant in self.dbSaver.feelings_dict:
+            self.dbSaver.feelings_dict[participant][0].update_total()
+        self.dbSaver.save_statistics()
 
     def set_stop_false(self):
         self.stop = False

@@ -74,7 +74,7 @@ class Statistics:
                 all_positive = record["happy"] + record["surprise"]
                 all_but_neutral = record["total"] - record["neutral"]
                 users_percents.append(round(float(all_positive / all_but_neutral) * 100, 2))
-            percentage = round(sum(users_percents)/len(users_percents), 2)
+            percentage = round(sum(users_percents) / len(users_percents), 2)
         elif time == "last_week" or time == "last_month":
             if time == "last_week":
                 after_time = week_ago
@@ -94,8 +94,8 @@ class Statistics:
                     map_others[name] = [record["happy"] + record["surprise"], record["total"] - record["neutral"]]
 
             for value in map_others.values():
-                users_percents.append(round(float(value[0]/value[1]) * 100, 2))
-            percentage = round(sum(users_percents)/len(users_percents), 2)
+                users_percents.append(round(float(value[0] / value[1]) * 100, 2))
+            percentage = round(sum(users_percents) / len(users_percents), 2)
 
         return percentage
 
@@ -132,7 +132,7 @@ class Statistics:
                  "participant": "Roni",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": False,
-                 "happy": i10 + (i+20),
+                 "happy": i10 + (i + 20),
                  "neutral": i10 + 2,
                  "sad": i10 + 3,
                  "angry": i10 + 4,
@@ -150,7 +150,7 @@ class Statistics:
                  "participant": "Moshe",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": False,
-                 "happy": i10 + (i+6),
+                 "happy": i10 + (i + 6),
                  "neutral": i10 + 2,
                  "sad": i10 + 3,
                  "angry": i10 + 4,
@@ -168,7 +168,7 @@ class Statistics:
                  "participant": "Steve",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": False,
-                 "happy": i10 + (i+10),
+                 "happy": i10 + (i + 10),
                  "neutral": i10 + 2,
                  "sad": i10 + 3,
                  "angry": i10 + 4,
@@ -187,7 +187,7 @@ class Statistics:
                 {"conversation_id": i,
                  "username": username,
                  "participant": "user",
-                 "date": datetime.now() - timedelta(days=20 + i%7),
+                 "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": True,
                  "happy": i10 + 1,
                  "neutral": i10 + 2,
@@ -205,9 +205,9 @@ class Statistics:
                 {"conversation_id": i,
                  "username": username,
                  "participant": "Roni",
-                 "date": datetime.now() - timedelta(days=20 + i%7),
+                 "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": False,
-                 "happy": i10 + (i+2),
+                 "happy": i10 + (i + 2),
                  "neutral": i10 + 2,
                  "sad": i10 + 3,
                  "angry": i10 + 4,
@@ -223,9 +223,9 @@ class Statistics:
                 {"conversation_id": i,
                  "username": username,
                  "participant": "Charmer",
-                 "date": datetime.now() - timedelta(days=20 + i%7),
+                 "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": False,
-                 "happy": i10 + (i+20),
+                 "happy": i10 + (i + 20),
                  "neutral": i10 + 2,
                  "sad": i10 + 3,
                  "angry": i10 + 4,
@@ -241,9 +241,9 @@ class Statistics:
                 {"conversation_id": i,
                  "username": username,
                  "participant": "ABABABABA",
-                 "date": datetime.now() - timedelta(days=20 + i%7),
+                 "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": False,
-                 "happy": i10 + (i+6),
+                 "happy": i10 + (i + 6),
                  "neutral": i10 + 2,
                  "sad": i10 + 3,
                  "angry": i10 + 4,
