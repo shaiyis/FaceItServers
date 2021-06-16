@@ -28,5 +28,5 @@ class DBSaver:
 
             self.db.statistics.insert_one(
                 {'conversation_id': str(self.conversation_id), 'username': self.username, 'participant': participant,
-                 'date': str(self.date), 'is_user': is_user, 'behaviors': behaviors_object.__dict__, 'checks': total_checks,
+                 'date': self.date, 'is_user': is_user, 'behaviors': behaviors_object.__dict__, 'checks': total_checks,
                  'matches': total_matches})
