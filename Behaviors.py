@@ -1,17 +1,17 @@
 class Behaviors:
-    def __init__(self):
-        self.neutral = 0
-        self.happy = 0
-        self.sad = 0
-        self.surprise = 0
-        self.angry = 0
-        self.disgust = 0
-        self.fear = 0
-        self.total = 0
+    def __init__(self, neutral=0, happy=0, sad=0, surprise=0, angry=0, disgust=0, fear=0, total=0):
+        self.neutral = neutral
+        self.happy = happy
+        self.sad = sad
+        self.surprise = surprise
+        self.angry = angry
+        self.disgust = disgust
+        self.fear = fear
+        self.total = total
 
     def update_total(self):
         self.total = self.neutral + self.happy + self.sad + self.surprise + self.angry \
-                        + self.disgust + self.fear
+                     + self.disgust + self.fear
 
     def update_behaviors(self, prediction):
         if prediction == "neutral":

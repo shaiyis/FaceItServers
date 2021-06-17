@@ -1,8 +1,12 @@
 import socket
+import uuid
+
 import numpy as np
 import cv2
 from flask_pymongo import PyMongo
 from datetime import datetime, timedelta
+
+from Behaviors import Behaviors
 
 
 class Statistics:
@@ -21,17 +25,14 @@ class Statistics:
 
         percentage = None
         if time == "last_call":
-            print("last_call")
             all_user_matches = self.db.statistics.find(
                 {"username": user_name, "is_user": True}, {"matches": 1, "checks": 1}).sort("date", -1)
             if all_user_matches is not None:
                 all_user_matches = all_user_matches[:1]
         elif time == "last_week":
-            print("last_week")
             all_user_matches = self.db.statistics.find(
                 {"username": user_name, "is_user": True, "date": {"$gte": week_ago}})
         elif time == "last_month":
-            print("last_month")
             all_user_matches = self.db.statistics.find(
                 {"username": user_name, "is_user": True, "date": {"$gte": month_ago}})
         else:
@@ -53,7 +54,7 @@ class Statistics:
         return all_checks, all_matches
 
     def get_positive_others(self, user_name, time):
-        self.db_insert_statistics_example()
+        # self.db_insert_statistics_example()
         now = datetime.now()
         # check last week's conversations
         week_ago = now - timedelta(days=7)
@@ -71,8 +72,9 @@ class Statistics:
                 {"username": user_name, "is_user": False, "conversation_id": conversation_id})
             for record in all_others:
                 print(record)
-                all_positive = record["happy"] + record["surprise"]
-                all_but_neutral = record["total"] - record["neutral"]
+                behaviors = record["behaviors"]
+                all_positive = behaviors["happy"] + behaviors["surprise"]
+                all_but_neutral = behaviors["total"] - behaviors["neutral"]
                 users_percents.append(round(float(all_positive / all_but_neutral) * 100, 2))
             percentage = round(sum(users_percents) / len(users_percents), 2)
         elif time == "last_week" or time == "last_month":
@@ -87,11 +89,13 @@ class Statistics:
             for record in all_others:
                 print(record)
                 name = record["participant"]
+                behaviors = record["behaviors"]
                 if name in map_others:
-                    map_others[name][0] += (record["happy"] + record["surprise"])
-                    map_others[name][1] += (record["total"] - record["neutral"])
+                    map_others[name][0] += (behaviors["happy"] + behaviors["surprise"])
+                    map_others[name][1] += (behaviors["total"] - behaviors["neutral"])
                 else:
-                    map_others[name] = [record["happy"] + record["surprise"], record["total"] - record["neutral"]]
+                    map_others[name] = [behaviors["happy"] + behaviors["surprise"],
+                                        behaviors["total"] - behaviors["neutral"]]
 
             for value in map_others.values():
                 users_percents.append(round(float(value[0] / value[1]) * 100, 2))
@@ -99,6 +103,46 @@ class Statistics:
 
         return percentage
 
+    def compare_happy_sad(self, user_name, time):
+        after_time = None
+        week_ago, month_ago = self.get_week_ago_month_ago()
+
+        if time == "last_call":
+            all_records = self.db.statistics.find(
+                {"username": user_name, "is_user": True})
+        else:
+            if time == "last_week":
+                after_time = week_ago
+            else:
+                after_time = month_ago
+            all_records = self.db.statistics.find(
+                {"username": user_name, "is_user": True, "date": {"$gte": after_time}})
+
+        if all_records is None:
+            return None, None
+
+        #todo: make it percents (divide by total?)
+
+        positive = 0
+        negative = 0
+        for record in all_records:
+            behaviors = record["behaviors"]
+            current_positive = behaviors["happy"] + behaviors["surprise"]
+            positive += current_positive
+            negative += (behaviors["total"] - current_positive - behaviors["neutral"])
+
+        return positive, negative
+
+    def get_week_ago_month_ago(self):
+        now = datetime.now()
+        # check last week's conversations
+        week_ago = now - timedelta(days=7)
+        # check the last month's conversations (last 30 days)
+        month_ago = now - timedelta(days=30)
+
+        return week_ago, month_ago
+
+    @staticmethod
     def db_insert_statistics_example(self):
         # conversation_id, username, participant (name if not username - user),
         # date, is_user, number of times per each emotion, checks, matches
@@ -108,74 +152,56 @@ class Statistics:
         # גילעד זה מdataset בשם FER2013 ויש שם happy, neutral, sad, angry, surprise, disgust, fear
         for i in range(40):
             i10 = 10 * i
+            conversation_id = uuid.uuid4()
+            b1 = Behaviors(i10 + 1, i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b1.update_total()
+
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "user",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": True,
-                 "happy": i10 + 1,
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b1.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
+            b1 = Behaviors(i10 + (i + 20), i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b1.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "Roni",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": False,
-                 "happy": i10 + (i + 20),
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b1.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
+            b1 = Behaviors(i10 + (i + 6), i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b1.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "Moshe",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": False,
-                 "happy": i10 + (i + 6),
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b1.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
+            b1 = Behaviors(i10 + (i + 10), i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b1.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "Steve",
                  "date": datetime.now() - timedelta(days=i % 7),
                  "is_user": False,
-                 "happy": i10 + (i + 10),
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b1.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
@@ -183,93 +209,67 @@ class Statistics:
 
         for i in range(40, 50):
             i10 = i * 10
+            b2 = Behaviors(i10 + 1, i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b2.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "user",
                  "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": True,
-                 "happy": i10 + 1,
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b2.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
+            b2 = Behaviors(i10 + (i + 2), i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b2.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "Roni",
                  "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": False,
-                 "happy": i10 + (i + 2),
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b2.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
+            b2 = Behaviors(i10 + (i + 20), i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b2.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "Charmer",
                  "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": False,
-                 "happy": i10 + (i + 20),
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b2.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
+            b2 = Behaviors(i10 + (i + 6), i10 + 2, i10 + 3, i10 + 4, i10 + 5, i10 + 6, i10 + 7)
+            b2.update_total()
             mylist.append(
-                {"conversation_id": i,
+                {"conversation_id": str(i),
                  "username": username,
                  "participant": "ABABABABA",
                  "date": datetime.now() - timedelta(days=20 + i % 7),
                  "is_user": False,
-                 "happy": i10 + (i + 6),
-                 "neutral": i10 + 2,
-                 "sad": i10 + 3,
-                 "angry": i10 + 4,
-                 "surprise": i10 + 5,
-                 "disgust": i10 + 6,
-                 "fear": i10 + 7,
-                 "total": 7 * i10 + 1 + 2 + 3 + 4 + 5 + 6 + 7,
+                 "behaviors": b2.__dict__,
                  "checks": i + 5,
                  "matches": i
                  }
             )
-
+        b = Behaviors(10, 50, 5, 4, 5, 6, 7)
+        b.update_total()
         mylist.append(
-            {"conversation_id": 200,
+            {"conversation_id": "200",
              "username": username,
              "participant": "long_time_ago",
              "date": datetime.now() - timedelta(days=50),
              "is_user": False,
-             "happy": 10,
-             "neutral": 50,
-             "sad": 5,
-             "angry": 4,
-             "surprise": 5,
-             "disgust": 6,
-             "fear": 7,
-             "total": 10 + 50 + 5 + 4 + 5 + 6 + 7,
+             "behaviors": b.__dict__,
              "checks": 5,
              "matches": 5
              }

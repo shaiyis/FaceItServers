@@ -99,7 +99,7 @@ def start():
         thread.start()
         return Response("success", status=200, mimetype='text/xml')
     except:
-        return Response("failure", status=200, mimetype='text/xml')
+        return Response("failure", status=400, mimetype='text/xml')
 
 
 @app.route("/stop", methods=['POST'])
@@ -119,19 +119,19 @@ def stop():
 def match_user():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-    match_percents = statistics.get_user_match(user_name, time)
+    positive, negative = statistics.get_user_match(user_name, time)
 
-    if match_percents is None:
+    if positive is None or negative is None:
         return Response("db failure", status=400, mimetype='text/xml')
 
-    return jsonify(({'percents': match_percents}))
+    return jsonify(({'positive': positive, 'negative': negative}))
 
 
 @app.route("/statistics/user/happy_sad", methods=['GET'])
 def compare_happy_sad():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-    match_percents = statistics.get_user_match(user_name, time)
+    match_percents = statistics.compare_happy_sad(user_name, time)
 
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
