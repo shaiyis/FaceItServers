@@ -102,6 +102,7 @@ def start():
         return Response("failure", status=400, mimetype='text/xml')
 
 
+# stops udp loop and insert all to DB
 @app.route("/stop", methods=['POST'])
 def stop():
     checks = int(request.form.get('checks'))
@@ -115,18 +116,33 @@ def stop():
         return Response("db failure", status=400, mimetype='text/xml')
 
 
+# returns percents (of matching to others)
 @app.route("/statistics/user/match", methods=['GET'])
 def match_user():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-    positive, negative = statistics.get_user_match(user_name, time)
+    match_percents = statistics.get_user_match(user_name, time)
 
-    if positive is None or negative is None:
+    if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
 
-    return jsonify(({'positive': positive, 'negative': negative}))
+    return jsonify(({'percents': match_percents}))
 
 
+# returns percents (how much others where positive)
+@app.route("/statistics/others", methods=['GET'])
+def others():
+    user_name = request.args.get('user_name')
+    time = request.args.get('time')
+
+    match_percents = statistics.get_positive_others(user_name, time)
+    if match_percents is None:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+    return jsonify(({'percents': match_percents}))
+
+
+# returns {"positive_percents":positive_percents, "negative_percents":negative_percents}
 @app.route("/statistics/user/happy_sad", methods=['GET'])
 def compare_happy_sad():
     user_name = request.args.get('user_name')
@@ -139,28 +155,20 @@ def compare_happy_sad():
     return jsonify(happy_sad_percents)
 
 
+# returns {"happy_percents": happy_percents, "neutral_percents": neutral_percents,
+# "sad_percents": sad_percents, "surprise_percents": surprise_percents,
+# "angry_percents": angry_percents, "disgust_percents": disgust_percents,
+# "fear_percents": fear_percents}
 @app.route("/statistics/user/emotions", methods=['GET'])
 def get_all_emotions():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-
     all_percents = statistics.get_all_emotions(user_name, time)
     if all_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
 
     return jsonify(all_percents)
 
-
-@app.route("/statistics/others", methods=['GET'])
-def others():
-    user_name = request.args.get('user_name')
-    time = request.args.get('time')
-
-    match_percents = statistics.get_positive_others(user_name, time)
-    if match_percents is None:
-        return Response("db failure", status=400, mimetype='text/xml')
-
-    return jsonify(({'percents': match_percents}))
 
 # @app.before_request
 # def before_request():
