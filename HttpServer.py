@@ -131,12 +131,24 @@ def match_user():
 def compare_happy_sad():
     user_name = request.args.get('user_name')
     time = request.args.get('time')
-    match_percents = statistics.compare_happy_sad(user_name, time)
+    happy_sad_percents = statistics.compare_happy_sad(user_name, time)
 
-    if match_percents is None:
+    if happy_sad_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
 
-    return jsonify(({'percents': match_percents}))
+    return jsonify(happy_sad_percents)
+
+
+@app.route("/statistics/user/emotions", methods=['GET'])
+def get_all_emotions():
+    user_name = request.args.get('user_name')
+    time = request.args.get('time')
+
+    all_percents = statistics.get_all_emotions(user_name, time)
+    if all_percents is None:
+        return Response("db failure", status=400, mimetype='text/xml')
+
+    return jsonify(all_percents)
 
 
 @app.route("/statistics/others", methods=['GET'])

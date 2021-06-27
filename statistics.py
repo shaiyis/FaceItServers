@@ -104,12 +104,15 @@ class Statistics:
         return percentage
 
     def compare_happy_sad(self, user_name, time):
+        # self.db_insert_statistics_example()
         after_time = None
         week_ago, month_ago = self.get_week_ago_month_ago()
 
         if time == "last_call":
             all_records = self.db.statistics.find(
-                {"username": user_name, "is_user": True})
+                {"username": user_name, "is_user": True}).sort("date", -1)
+            if all_records is not None:
+                all_records = all_records[:1]
         else:
             if time == "last_week":
                 after_time = week_ago
@@ -119,19 +122,79 @@ class Statistics:
                 {"username": user_name, "is_user": True, "date": {"$gte": after_time}})
 
         if all_records is None:
-            return None, None
-
-        #todo: make it percents (divide by total?)
+            return None
 
         positive = 0
         negative = 0
+        all_total = 0
         for record in all_records:
             behaviors = record["behaviors"]
             current_positive = behaviors["happy"] + behaviors["surprise"]
             positive += current_positive
-            negative += (behaviors["total"] - current_positive - behaviors["neutral"])
+            current_total = behaviors["total"] - behaviors["neutral"]
+            all_total += current_total
+            negative += (current_total - current_positive)
 
-        return positive, negative
+        print("positive:", positive)
+        print("negative:", negative)
+
+        positive_percents = round(float(positive / all_total) * 100, 2)
+        negative_percents = round(float(negative / all_total) * 100, 2)
+
+        return {"positive_percents":positive_percents, "negative_percents":negative_percents}
+
+    def get_all_emotions(self, user_name, time):
+        # self.db_insert_statistics_example()
+        after_time = None
+        week_ago, month_ago = self.get_week_ago_month_ago()
+
+        if time == "last_call":
+            all_records = self.db.statistics.find(
+                {"username": user_name, "is_user": True}).sort("date", -1)
+            if all_records is not None:
+                all_records = all_records[:1]
+        else:
+            if time == "last_week":
+                after_time = week_ago
+            else:
+                after_time = month_ago
+            all_records = self.db.statistics.find(
+                {"username": user_name, "is_user": True, "date": {"$gte": after_time}})
+
+        if all_records is None:
+            return None
+
+        happy = 0
+        neutral = 0
+        sad = 0
+        surprise = 0
+        angry = 0
+        disgust = 0
+        fear = 0
+        total = 0
+        for record in all_records:
+            behaviors = record["behaviors"]
+            happy += behaviors["happy"]
+            neutral += behaviors["neutral"]
+            sad += behaviors["sad"]
+            surprise += behaviors["surprise"]
+            angry += behaviors["angry"]
+            disgust += behaviors["disgust"]
+            fear += behaviors["fear"]
+            total += behaviors["total"]
+
+        happy_percents = round(float(happy / total) * 100, 2)
+        neutral_percents = round(float(neutral / total) * 100, 2)
+        sad_percents = round(float(sad / total) * 100, 2)
+        surprise_percents = round(float(surprise / total) * 100, 2)
+        angry_percents = round(float(angry / total) * 100, 2)
+        disgust_percents = round(float(disgust / total) * 100, 2)
+        fear_percents = round(float(fear / total) * 100, 2)
+
+        return {"happy_percents": happy_percents, "neutral_percents": neutral_percents,
+                "sad_percents": sad_percents, "surprise_percents": surprise_percents,
+                "angry_percents": angry_percents, "disgust_percents": disgust_percents,
+                "fear_percents": fear_percents}
 
     def get_week_ago_month_ago(self):
         now = datetime.now()
@@ -142,14 +205,12 @@ class Statistics:
 
         return week_ago, month_ago
 
-    @staticmethod
     def db_insert_statistics_example(self):
         # conversation_id, username, participant (name if not username - user),
         # date, is_user, number of times per each emotion, checks, matches
         mylist = []
         username = "Yossi"
 
-        # גילעד זה מdataset בשם FER2013 ויש שם happy, neutral, sad, angry, surprise, disgust, fear
         for i in range(40):
             i10 = 10 * i
             conversation_id = uuid.uuid4()
