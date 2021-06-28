@@ -125,6 +125,8 @@ def match_user():
 
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
+    elif match_percents == -1:
+        return Response("no checks has been detected", status=400, mimetype='text/xml')
 
     return jsonify(({'percents': match_percents}))
 
@@ -138,6 +140,8 @@ def others():
     match_percents = statistics.get_positive_others(user_name, time)
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
+    elif match_percents == -1:
+        return Response("no others to check", status=400, mimetype='text/xml')
 
     return jsonify(({'percents': match_percents}))
 

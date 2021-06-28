@@ -39,6 +39,8 @@ class Statistics:
             all_user_matches = None
         if all_user_matches is not None:
             all_checks, all_matches = self.get_checks_and_matches(all_user_matches)
+            if all_checks == 0:
+                return -1
             percentage = round(float(all_matches / all_checks) * 100, 2)
 
         return percentage
@@ -46,8 +48,6 @@ class Statistics:
     def get_checks_and_matches(self, all_matches_from_db):
         all_checks, all_matches, i = 0, 0, 0
         for x in all_matches_from_db:
-            print(f"item number {i + 1}")
-            print(x)
             all_checks += x["checks"]
             all_matches += x["matches"]
             i = i + 1
@@ -71,12 +71,15 @@ class Statistics:
             all_others = self.db.statistics.find(
                 {"username": user_name, "is_user": False, "conversation_id": conversation_id})
             for record in all_others:
-                print(record)
                 behaviors = record["behaviors"]
                 all_positive = behaviors["happy"] + behaviors["surprise"]
                 all_but_neutral = behaviors["total"] - behaviors["neutral"]
-                users_percents.append(round(float(all_positive / all_but_neutral) * 100, 2))
-            percentage = round(sum(users_percents) / len(users_percents), 2)
+                if all_but_neutral > 0:
+                    users_percents.append(round(float(all_positive / all_but_neutral) * 100, 2))
+            if len(users_percents) > 0:
+                percentage = round(sum(users_percents) / len(users_percents), 2)
+            else:
+                return -1
         elif time == "last_week" or time == "last_month":
             if time == "last_week":
                 after_time = week_ago
@@ -99,7 +102,10 @@ class Statistics:
 
             for value in map_others.values():
                 users_percents.append(round(float(value[0] / value[1]) * 100, 2))
-            percentage = round(sum(users_percents) / len(users_percents), 2)
+            if len(users_percents) > 0:
+                percentage = round(sum(users_percents) / len(users_percents), 2)
+            else:
+                return -1
 
         return percentage
 
