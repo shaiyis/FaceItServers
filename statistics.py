@@ -1,3 +1,4 @@
+import os
 import socket
 import uuid
 
@@ -5,6 +6,10 @@ import numpy as np
 import cv2
 from flask_pymongo import PyMongo
 from datetime import datetime, timedelta
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 
 from Behaviors import Behaviors
 
@@ -147,7 +152,7 @@ class Statistics:
         positive_percents = round(float(positive / all_total) * 100, 2)
         negative_percents = round(float(negative / all_total) * 100, 2)
 
-        return {"positive_percents":positive_percents, "negative_percents":negative_percents}
+        return {"positive_percents": positive_percents, "negative_percents": negative_percents}
 
     def get_all_emotions(self, user_name, time):
         # self.db_insert_statistics_example()
@@ -342,6 +347,46 @@ class Statistics:
              }
         )
         self.db.statistics.insert_many(mylist)
+
+    def send_email(self, username, image, time):
+        # user = self.db.users.find_one({"username": username})
+        # if user is None:
+        #     return "user not exist"
+        # user_email = user["email"]
+        user_email = "giladashe@gmail.com"
+
+        ImgFileName = f"{username}/statistics/{time}.jpg"
+        From = "face.it.server@gmail.com"
+        password = "Faceit64123"
+        # To = "giladashe@gmail.com"
+        To = user_email
+
+        # with open(ImgFileName, 'rb') as f:
+        #     img_data = f.read()
+
+        msg = MIMEMultipart()
+        # todo: add time (month,week etc..) to subject
+        msg['Subject'] = f"{username}'s statistics for {time}"
+        msg['From'] = From
+        msg['To'] = To
+
+        # todo: add time (month,week etc..) to text
+        text = MIMEText(f"This is {username}'s statistics for {time}")
+        msg.attach(text)
+        # image = MIMEImage(img_data, name=os.path.basename(ImgFileName))
+        image = MIMEImage(image, name=os.path.basename(ImgFileName))
+
+        msg.attach(image)
+
+        s = smtplib.SMTP("smtp.gmail.com", 587)
+        s.ehlo()
+        s.starttls()
+        s.ehlo()
+
+        s.login(From, password)
+        s.sendmail(From, To, msg.as_string())
+        s.quit()
+
 
 
 # conversation_id, username, participant (other), date, number of times per each emotion,

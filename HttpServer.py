@@ -6,7 +6,8 @@
 #   app.run(debug=True)
 
 # to see mongoDB state visually, just copy mongodb://localhost:27017/ to mongoDB Compass
-
+import base64
+import json
 from flask import Flask, request, jsonify, Response, redirect
 from flask_pymongo import PyMongo
 import pymongo.errors
@@ -102,6 +103,9 @@ def start():
         return Response("failure", status=400, mimetype='text/xml')
 
 
+#todo: add try catch, check how image will be sent
+
+
 # stops udp loop and insert all to DB
 @app.route("/stop", methods=['POST'])
 def stop():
@@ -172,6 +176,34 @@ def get_all_emotions():
         return Response("db failure", status=400, mimetype='text/xml')
 
     return jsonify(all_percents)
+
+
+# stops udp loop and insert all to DB
+@app.route("/statistics/email", methods=['POST'])
+def send_email():
+    try:
+
+        jsonStr = request.data.decode('utf-8')
+        the_data = json.loads(jsonStr)
+        image = the_data['image']
+        image = base64.b64decode(image)
+        user_name = the_data['user_name']
+        # image = request.form.get('image')
+        # image = base64.b64encode(image)
+        # time = str(request.form.get('time'))
+
+        # np_arr = np.frombuffer(request.data, np.uint8)
+        # img_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        # cv2.imwrite("C:/Users/gilad/PycharmProjects/FaceItServers/wow.jpg", img_np)
+        # result = statistics.send_email(user_name, image, time)
+        result = statistics.send_email("yossi", image, "last_month")
+
+        if result == "user not exist":
+            return Response(result, status=400, mimetype='text/xml')
+        else:
+            return Response("success", status=200, mimetype='text/xml')
+    except:
+        return Response("Error sending mail", status=400, mimetype='text/xml')
 
 
 # @app.before_request
