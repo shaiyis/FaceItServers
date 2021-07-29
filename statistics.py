@@ -42,7 +42,7 @@ class Statistics:
                 {"username": user_name, "is_user": True, "date": {"$gte": month_ago}})
         else:
             all_user_matches = None
-        if all_user_matches is not None:
+        if all_user_matches is not None and len(all_user_matches) > 0:
             all_checks, all_matches = self.get_checks_and_matches(all_user_matches)
             if all_checks == 0:
                 return -1
@@ -134,7 +134,8 @@ class Statistics:
 
         if all_records is None:
             return None
-
+        elif len(all_records) <= 0:
+            return 0
         positive = 0
         negative = 0
         all_total = 0
@@ -349,10 +350,12 @@ class Statistics:
         self.db.statistics.insert_many(mylist)
 
     def send_email(self, username, image, time):
+        # todo add
         # user = self.db.users.find_one({"username": username})
         # if user is None:
         #     return "user not exist"
         # user_email = user["email"]
+        # todo remove
         user_email = "giladashe@gmail.com"
 
         ImgFileName = f"{username}/statistics/{time}.jpg"
@@ -373,7 +376,6 @@ class Statistics:
         # todo: add time (month,week etc..) to text
         text = MIMEText(f"This is {username}'s statistics for {time}")
         msg.attach(text)
-        # image = MIMEImage(img_data, name=os.path.basename(ImgFileName))
         image = MIMEImage(image, name=os.path.basename(ImgFileName))
 
         msg.attach(image)
@@ -386,10 +388,3 @@ class Statistics:
         s.login(From, password)
         s.sendmail(From, To, msg.as_string())
         s.quit()
-
-
-
-# conversation_id, username, participant (other), date, number of times per each emotion,
-# *total_time*
-def ticks(dt):
-    return (dt - datetime(1, 1, 1)).total_seconds() * 10000000
