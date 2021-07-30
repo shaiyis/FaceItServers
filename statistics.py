@@ -75,6 +75,8 @@ class Statistics:
             conversation_id = last[0]["conversation_id"]
             all_others = self.db.statistics.find(
                 {"username": user_name, "is_user": False, "conversation_id": conversation_id})
+            if all_others.count() <= 0:
+                return -1
             for record in all_others:
                 behaviors = record["behaviors"]
                 all_positive = behaviors["happy"] + behaviors["surprise"]
@@ -134,7 +136,7 @@ class Statistics:
 
         if all_records is None:
             return None
-        elif len(all_records) <= 0:
+        elif all_records.count() <= 0:
             return 0
         positive = 0
         negative = 0
@@ -173,7 +175,7 @@ class Statistics:
             all_records = self.db.statistics.find(
                 {"username": user_name, "is_user": True, "date": {"$gte": after_time}})
 
-        if all_records is None:
+        if all_records is None or all_records.count() <= 0:
             return None
 
         happy = 0
