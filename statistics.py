@@ -42,7 +42,7 @@ class Statistics:
                 {"username": user_name, "is_user": True, "date": {"$gte": month_ago}})
         else:
             all_user_matches = None
-        if all_user_matches is not None and len(all_user_matches) > 0:
+        if all_user_matches is not None and all_user_matches.count() > 0:
             all_checks, all_matches = self.get_checks_and_matches(all_user_matches)
             if all_checks == 0:
                 return -1

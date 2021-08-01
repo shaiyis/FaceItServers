@@ -183,8 +183,8 @@ def get_all_emotions():
 def send_email():
     try:
 
-        jsonStr = request.data.decode('utf-8')
-        the_data = json.loads(jsonStr)
+        json_str = request.data.decode('utf-8')
+        the_data = json.loads(json_str)
         image = the_data['image']
         image = base64.b64decode(image)
         user_name = the_data['user_name']
