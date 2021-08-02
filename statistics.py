@@ -42,11 +42,14 @@ class Statistics:
                 {"username": user_name, "is_user": True, "date": {"$gte": month_ago}})
         else:
             all_user_matches = None
-        if all_user_matches is not None and all_user_matches.count() > 0:
-            all_checks, all_matches = self.get_checks_and_matches(all_user_matches)
-            if all_checks == 0:
-                return -1
-            percentage = round(float(all_matches / all_checks) * 100, 2)
+        if all_user_matches is not None:
+            if all_user_matches.count() > 0:
+                all_checks, all_matches = self.get_checks_and_matches(all_user_matches)
+                if all_checks == 0:
+                    return -1
+                percentage = round(float(all_matches / all_checks) * 100, 2)
+            else:  # all_user_matches.count() == 0
+                percentage = 0
 
         return percentage
 
@@ -72,11 +75,15 @@ class Statistics:
                 {"username": user_name, "is_user": False}).sort("date", -1)
             if last is None:
                 return None
+            if last.count() <= 0:
+                return 0
             conversation_id = last[0]["conversation_id"]
             all_others = self.db.statistics.find(
                 {"username": user_name, "is_user": False, "conversation_id": conversation_id})
+            if all_others is None:
+                return None
             if all_others.count() <= 0:
-                return -1
+                return 0
             for record in all_others:
                 behaviors = record["behaviors"]
                 all_positive = behaviors["happy"] + behaviors["surprise"]
@@ -86,7 +93,7 @@ class Statistics:
             if len(users_percents) > 0:
                 percentage = round(sum(users_percents) / len(users_percents), 2)
             else:
-                return -1
+                return 0
         elif time == "last_week" or time == "last_month":
             if time == "last_week":
                 after_time = week_ago
@@ -96,6 +103,10 @@ class Statistics:
 
             all_others = self.db.statistics.find(
                 {"username": user_name, "is_user": False, "date": {"$gte": after_time}})
+            if all_others is None:
+                return None
+            if all_others.count() <= 0:
+                return 0
             for record in all_others:
                 print(record)
                 name = record["participant"]
@@ -112,7 +123,7 @@ class Statistics:
             if len(users_percents) > 0:
                 percentage = round(sum(users_percents) / len(users_percents), 2)
             else:
-                return -1
+                return 0
 
         return percentage
 
@@ -175,8 +186,14 @@ class Statistics:
             all_records = self.db.statistics.find(
                 {"username": user_name, "is_user": True, "date": {"$gte": after_time}})
 
-        if all_records is None or all_records.count() <= 0:
+        if all_records is None:
             return None
+
+        if all_records.count() <= 0:
+            return {"happy_percents": 0, "neutral_percents": 0,
+                "sad_percents": 0, "surprise_percents": 0,
+                "angry_percents": 0, "disgust_percents": 0,
+                "fear_percents": 0}
 
         happy = 0
         neutral = 0
