@@ -3,7 +3,6 @@ import numpy as np
 import cv2
 from EmotionDetector import EmotionDetector
 from datetime import datetime
-from dbSaver import DBSaver
 from Behaviors import Behaviors
 
 

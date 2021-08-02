@@ -137,7 +137,7 @@ class Statistics:
         if all_records is None:
             return None
         elif all_records.count() <= 0:
-            return 0
+            return {"positive_percents": 0, "negative_percents": 0}
         positive = 0
         negative = 0
         all_total = 0
@@ -223,7 +223,7 @@ class Statistics:
         # conversation_id, username, participant (name if not username - user),
         # date, is_user, number of times per each emotion, checks, matches
         mylist = []
-        username = "Yossi"
+        username = "a"
 
         for i in range(40):
             i10 = 10 * i
