@@ -186,7 +186,7 @@ def send_email():
         the_data = json.loads(json_str)
         image = the_data['image']
         image = base64.b64decode(image)
-        user_name = the_data['user_name']
+        user_name = the_data['userName']
         # image = request.form.get('image')
         # image = base64.b64encode(image)
         # time = str(request.form.get('time'))

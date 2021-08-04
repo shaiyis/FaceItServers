@@ -111,6 +111,7 @@ class Statistics:
                 print(record)
                 name = record["participant"]
                 behaviors = record["behaviors"]
+                print(behaviors)
                 if name in map_others:
                     map_others[name][0] += (behaviors["happy"] + behaviors["surprise"])
                     map_others[name][1] += (behaviors["total"] - behaviors["neutral"])
@@ -119,6 +120,8 @@ class Statistics:
                                         behaviors["total"] - behaviors["neutral"]]
 
             for value in map_others.values():
+                if float(value[1]) == 0.0:
+                    continue
                 users_percents.append(round(float(value[0] / value[1]) * 100, 2))
             if len(users_percents) > 0:
                 percentage = round(sum(users_percents) / len(users_percents), 2)
@@ -162,9 +165,12 @@ class Statistics:
 
         print("positive:", positive)
         print("negative:", negative)
-
-        positive_percents = round(float(positive / all_total) * 100, 2)
-        negative_percents = round(float(negative / all_total) * 100, 2)
+        if all_total == 0:
+            positive_percents = 0
+            negative_percents = 0
+        else:
+            positive_percents = round(float(positive / all_total) * 100, 2)
+            negative_percents = round(float(negative / all_total) * 100, 2)
 
         return {"positive_percents": positive_percents, "negative_percents": negative_percents}
 
@@ -203,6 +209,13 @@ class Statistics:
         disgust = 0
         fear = 0
         total = 0
+        happy_percents = 0
+        neutral_percents = 0
+        sad_percents = 0
+        surprise_percents = 0
+        angry_percents = 0
+        disgust_percents = 0
+        fear_percents = 0
         for record in all_records:
             behaviors = record["behaviors"]
             happy += behaviors["happy"]
@@ -214,13 +227,14 @@ class Statistics:
             fear += behaviors["fear"]
             total += behaviors["total"]
 
-        happy_percents = round(float(happy / total) * 100, 2)
-        neutral_percents = round(float(neutral / total) * 100, 2)
-        sad_percents = round(float(sad / total) * 100, 2)
-        surprise_percents = round(float(surprise / total) * 100, 2)
-        angry_percents = round(float(angry / total) * 100, 2)
-        disgust_percents = round(float(disgust / total) * 100, 2)
-        fear_percents = round(float(fear / total) * 100, 2)
+        if total > 0:
+            happy_percents = round(float(happy / total) * 100, 2)
+            neutral_percents = round(float(neutral / total) * 100, 2)
+            sad_percents = round(float(sad / total) * 100, 2)
+            surprise_percents = round(float(surprise / total) * 100, 2)
+            angry_percents = round(float(angry / total) * 100, 2)
+            disgust_percents = round(float(disgust / total) * 100, 2)
+            fear_percents = round(float(fear / total) * 100, 2)
 
         return {"happy_percents": happy_percents, "neutral_percents": neutral_percents,
                 "sad_percents": sad_percents, "surprise_percents": surprise_percents,
