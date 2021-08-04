@@ -14,7 +14,7 @@ import pymongo.errors
 import os
 import hashlib
 from threading import Thread
-from DetectionServer import DetectionServer
+# from DetectionServer import DetectionServer
 from statistics import Statistics
 from dbSaver import DBSaver
 
@@ -23,7 +23,7 @@ app = Flask(__name__)  # Flask app
 
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
-server = DetectionServer()
+# server = DetectionServer()
 statistics = Statistics(db)
 
 
@@ -187,15 +187,10 @@ def send_email():
         image = the_data['image']
         image = base64.b64decode(image)
         user_name = the_data['userName']
-        # image = request.form.get('image')
-        # image = base64.b64encode(image)
-        # time = str(request.form.get('time'))
+        # user_name = "blabla"
 
-        # np_arr = np.frombuffer(request.data, np.uint8)
-        # img_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        # cv2.imwrite("C:/Users/gilad/PycharmProjects/FaceItServers/wow.jpg", img_np)
-        # result = statistics.send_email(user_name, image, time)
-        result = statistics.send_email("yossi", image, "last_month")
+        time = the_data['time']
+        result = statistics.send_email(user_name, image, time)
 
         if result == "user not exist":
             return Response(result, status=400, mimetype='text/xml')

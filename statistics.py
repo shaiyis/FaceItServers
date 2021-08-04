@@ -384,14 +384,17 @@ class Statistics:
 
     def send_email(self, username, image, time):
         # todo add
-        # user = self.db.users.find_one({"username": username})
-        # if user is None:
-        #     return "user not exist"
+        user = self.db.users.find_one({"username": username})
+        if user is None:
+            return "user not exist"
         # user_email = user["email"]
+        #
         # todo remove
         user_email = "giladashe@gmail.com"
 
-        ImgFileName = f"{username}/statistics/{time}.jpg"
+        time = str(time).replace("_", " ")
+
+        ImgFileName = f"{username}'s statistics for {time}.jpg"
         From = "face.it.server@gmail.com"
         password = "Faceit64123"
         # To = "giladashe@gmail.com"
@@ -402,12 +405,13 @@ class Statistics:
 
         msg = MIMEMultipart()
         # todo: add time (month,week etc..) to subject
-        msg['Subject'] = f"{username}'s statistics for {time}"
+
+        msg['Subject'] = f"Your statistics for {time}"
         msg['From'] = From
         msg['To'] = To
 
         # todo: add time (month,week etc..) to text
-        text = MIMEText(f"This is {username}'s statistics for {time}")
+        text = MIMEText(f"Hello {username}!\n\nThis is your statistics for {time}.\n\nFaceIt Team")
         msg.attach(text)
         image = MIMEImage(image, name=os.path.basename(ImgFileName))
 
@@ -421,3 +425,4 @@ class Statistics:
         s.login(From, password)
         s.sendmail(From, To, msg.as_string())
         s.quit()
+        return "sent"
