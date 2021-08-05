@@ -20,13 +20,11 @@ class Statistics:
         self.db = db
 
     def get_user_match(self, user_name, time):
-        # self.db_insert_statistics_example()
         now = datetime.now()
         # check last week's conversations
         week_ago = now - timedelta(days=7)
         # check the last month's conversations (last 30 days)
         month_ago = now - timedelta(days=30)
-        print(f"week ago: {week_ago}")
 
         percentage = None
         if time == "last_call":
@@ -108,10 +106,8 @@ class Statistics:
             if all_others.count() <= 0:
                 return 0
             for record in all_others:
-                print(record)
                 name = record["participant"]
                 behaviors = record["behaviors"]
-                print(behaviors)
                 if name in map_others:
                     map_others[name][0] += (behaviors["happy"] + behaviors["surprise"])
                     map_others[name][1] += (behaviors["total"] - behaviors["neutral"])
@@ -163,8 +159,8 @@ class Statistics:
             all_total += current_total
             negative += (current_total - current_positive)
 
-        print("positive:", positive)
-        print("negative:", negative)
+        # print("positive:", positive)
+        # print("negative:", negative)
         if all_total == 0:
             positive_percents = 0
             negative_percents = 0
@@ -254,7 +250,7 @@ class Statistics:
         # conversation_id, username, participant (name if not username - user),
         # date, is_user, number of times per each emotion, checks, matches
         mylist = []
-        username = "a"
+        username = "israel"
 
         for i in range(40):
             i10 = 10 * i
@@ -387,11 +383,7 @@ class Statistics:
         user = self.db.users.find_one({"username": username})
         if user is None:
             return "user not exist"
-        # user_email = user["email"]
-        #
-        # todo remove
-        user_email = "giladashe@gmail.com"
-
+        user_email = user["email"]
         time = str(time).replace("_", " ")
 
         ImgFileName = f"{username}'s statistics for {time}.jpg"

@@ -14,7 +14,7 @@ import pymongo.errors
 import os
 import hashlib
 from threading import Thread
-# from DetectionServer import DetectionServer
+from DetectionServer import DetectionServer
 from statistics import Statistics
 from dbSaver import DBSaver
 
@@ -23,7 +23,7 @@ app = Flask(__name__)  # Flask app
 
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
-# server = DetectionServer()
+server = DetectionServer()
 statistics = Statistics(db)
 
 
@@ -130,7 +130,7 @@ def match_user():
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
     elif match_percents == -1:
-        return Response("no checks has been detected", status=400, mimetype='text/xml')
+        return Response("no checks has been detected", status=200, mimetype='text/xml')
 
     return jsonify(({'percents': match_percents}))
 
