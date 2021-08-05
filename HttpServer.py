@@ -18,18 +18,12 @@ from DetectionServer import DetectionServer
 from statistics import Statistics
 from dbSaver import DBSaver
 
-# ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)  # Flask app
 
 mongodb_client = PyMongo(app, uri="mongodb://localhost:27017/faceIt_DB")
 db = mongodb_client.db
 server = DetectionServer()
 statistics = Statistics(db)
-
-
-# print(FaceIt_DB.list_collection_names())
-# db.todos.insert_many([
-# ])
 
 
 # example user : a,b
@@ -103,20 +97,19 @@ def start():
         return Response("failure", status=400, mimetype='text/xml')
 
 
-#todo: add try catch, check how image will be sent
-
-
 # stops udp loop and insert all to DB
 @app.route("/stop", methods=['POST'])
 def stop():
     checks = int(request.form.get('checks'))
     matches = int(request.form.get('matches'))
-    server.stop_conversation(checks, matches)
-
-    if server.get_stop():
-        server.set_stop_false()
-        return Response("success", status=200, mimetype='text/xml')
-    else:
+    try:
+        server.stop_conversation(checks, matches)
+        if server.get_stop():
+            server.set_stop_false()
+            return Response("success", status=200, mimetype='text/xml')
+        else:
+            return Response("db failure", status=400, mimetype='text/xml')
+    except:
         return Response("db failure", status=400, mimetype='text/xml')
 
 
@@ -144,8 +137,6 @@ def others():
     match_percents = statistics.get_positive_others(user_name, time)
     if match_percents is None:
         return Response("db failure", status=400, mimetype='text/xml')
-    # elif match_percents == -1:
-    #     return Response("no others to check", status=400, mimetype='text/xml')
     return jsonify(({'percents': match_percents}))
 
 
@@ -187,7 +178,6 @@ def send_email():
         image = the_data['image']
         image = base64.b64decode(image)
         user_name = the_data['userName']
-        # user_name = "blabla"
 
         time = the_data['time']
         result = statistics.send_email(user_name, image, time)
@@ -200,13 +190,5 @@ def send_email():
         return Response("Error sending mail", status=400, mimetype='text/xml')
 
 
-# @app.before_request
-# def before_request():
-#     if not request.is_secure:
-#         url = request.url.replace('http://', 'https://', 1)
-#         code = 301
-#         return redirect(url, code=code)
-
-
 if __name__ == '__main__':
-    app.run(debug=True)  # , ssl_context=('cert.pem', 'key.pem')
+    app.run(debug=True)

@@ -27,6 +27,7 @@ class EmotionDetector(pr.Processor):
         # return self.draw(image, boxes2D)
 
 
+# detect one image
 # detect = EmotionDetector()
 # image = cv2.imread("images/photo_2021-04-21_21-11-51.jpg")
 # detect.call(image)

@@ -6,10 +6,6 @@ from datetime import datetime
 from Behaviors import Behaviors
 
 
-# localIP = ''
-# localPort = 5402
-# bufferSize = 1000000
-
 class DetectionServer:
 
     def __init__(self):

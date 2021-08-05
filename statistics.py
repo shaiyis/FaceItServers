@@ -159,8 +159,6 @@ class Statistics:
             all_total += current_total
             negative += (current_total - current_positive)
 
-        # print("positive:", positive)
-        # print("negative:", negative)
         if all_total == 0:
             positive_percents = 0
             negative_percents = 0
@@ -379,7 +377,6 @@ class Statistics:
         self.db.statistics.insert_many(mylist)
 
     def send_email(self, username, image, time):
-        # todo add
         user = self.db.users.find_one({"username": username})
         if user is None:
             return "user not exist"
@@ -389,20 +386,14 @@ class Statistics:
         ImgFileName = f"{username}'s statistics for {time}.jpg"
         From = "face.it.server@gmail.com"
         password = "Faceit64123"
-        # To = "giladashe@gmail.com"
         To = user_email
 
-        # with open(ImgFileName, 'rb') as f:
-        #     img_data = f.read()
-
         msg = MIMEMultipart()
-        # todo: add time (month,week etc..) to subject
 
         msg['Subject'] = f"Your statistics for {time}"
         msg['From'] = From
         msg['To'] = To
 
-        # todo: add time (month,week etc..) to text
         text = MIMEText(f"Hello {username}!\n\nThis is your statistics for {time}.\n\nFaceIt Team")
         msg.attach(text)
         image = MIMEImage(image, name=os.path.basename(ImgFileName))
